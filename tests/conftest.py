@@ -37,6 +37,56 @@ def fake_embedder(monkeypatch: pytest.MonkeyPatch) -> FakeEmbedder:
     return embedder
 
 
+class FakeChat:
+    """Minimal stand-in for a LangChain chat model.
+
+    `route_agents` drives `.with_structured_output(...)`; `reply` drives `.invoke`.
+    """
+
+    def __init__(self, reply: str = "canned answer", route_agents: tuple[str, ...] = ("rules",)):
+        self.reply = reply
+        self.route_agents = route_agents
+        self.calls: list[list] = []
+
+    def invoke(self, messages):
+        from langchain_core.messages import AIMessage
+
+        self.calls.append(messages)
+        return AIMessage(content=self.reply)
+
+    def with_structured_output(self, schema):
+        agents = list(self.route_agents)
+
+        class _Structured:
+            def invoke(_self, _messages):
+                return schema(agents=agents, reasoning="test")
+
+        return _Structured()
+
+    def bind_tools(self, _tools):
+        return self
+
+
+@pytest.fixture
+def fake_chat(monkeypatch: pytest.MonkeyPatch) -> FakeChat:
+    chat = FakeChat()
+    from nba_scout import llm as llm_mod
+    from nba_scout.agents import router, rules, stats, synthesis
+
+    for mod in (llm_mod, router, rules, stats, synthesis):
+        monkeypatch.setattr(mod, "get_chat_model", lambda: chat, raising=False)
+
+    # The stats ReAct agent is heavy; replace it with a canned runnable.
+    class _FakeReactAgent:
+        def invoke(self, _inputs):
+            from langchain_core.messages import AIMessage
+
+            return {"messages": [AIMessage(content="stats: 27.1 ppg")]}
+
+    monkeypatch.setattr(stats, "create_react_agent", lambda *_a, **_k: _FakeReactAgent())
+    return chat
+
+
 @pytest.fixture
 def memory_store(monkeypatch: pytest.MonkeyPatch):
     """A fresh, non-persistent in-memory store wired into pipeline + retrieval."""

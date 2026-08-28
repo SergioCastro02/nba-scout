@@ -27,6 +27,19 @@ def _cmd_ask(args: argparse.Namespace) -> None:
     print(format_context(results))
 
 
+def _cmd_chat(args: argparse.Namespace) -> None:
+    from .agents import answer_question
+
+    state = answer_question(args.question)
+    print(f"route: {', '.join(state.get('route', []))}\n")
+    print(state["answer"])
+    sources = {r.chunk.citation() for r in state.get("retrieved", [])}
+    if sources:
+        print("\nknowledge-base sources:")
+        for s in sorted(sources):
+            print(f"  - {s}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(prog="nba-scout", description=f"nba-scout {__version__}")
     common = argparse.ArgumentParser(add_help=False)
@@ -45,6 +58,14 @@ def main() -> None:
     p_ask.add_argument("question")
     p_ask.add_argument("--top-k", type=int, default=None)
     p_ask.set_defaults(func=_cmd_ask)
+
+    p_chat = sub.add_parser(
+        "chat",
+        help="answer a question with the full agent graph (needs an LLM key)",
+        parents=[common],
+    )
+    p_chat.add_argument("question")
+    p_chat.set_defaults(func=_cmd_chat)
 
     args = parser.parse_args()
     logging.basicConfig(

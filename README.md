@@ -16,8 +16,8 @@ statistics tools**, orchestrated as a **LangGraph** agent graph.
         └──► synthesis agent ──► grounded answer with citations
 ```
 
-> **Status:** knowledge-base ingestion + retrieval working. Agent graph and API
-> are the next milestones — see [Roadmap](#roadmap).
+> **Status:** knowledge base + LangGraph agent graph working from the CLI. FastAPI
+> service, tracing and eval are next — see [Roadmap](#roadmap).
 
 ## Design
 
@@ -42,8 +42,17 @@ nba-scout ingest -v                       # builds the in-memory KB from bundled
 nba-scout ask "how many fouls before a player fouls out?"
 ```
 
-`ask` currently returns the retrieved passages; the LLM answer step lands with the
-agent graph.
+`ask` returns the raw retrieved passages. For a full answer through the agent
+graph, set an LLM key and use `chat`:
+
+```bash
+export NBA_SCOUT_ANTHROPIC_API_KEY=sk-ant-...
+nba-scout chat "is a flagrant 2 an automatic ejection, and who led the league in points in 2023-24?"
+```
+
+The router sends the rules half to the RAG agent and the stats half to a ReAct
+agent over the live-stats tools; the synthesis node merges them, keeping the
+knowledge-base citations.
 
 ## With Postgres + pgvector
 
@@ -85,7 +94,8 @@ pytest
 
 - [x] Config-driven providers (LLM / embeddings / vector store)
 - [x] Ingestion pipeline (bundled summaries + PDF loader) and retrieval
-- [ ] LangGraph agent graph: router → rules / stats → synthesis
+- [x] LangGraph agent graph: router → rules / stats → synthesis
+- [ ] Stats agent talks to `nba-mcp-server` over MCP when `MCP_SERVER_URL` is set
 - [ ] FastAPI service with streaming + `/healthz`
 - [ ] LangSmith / OpenTelemetry tracing
 - [ ] RAG evaluation harness (faithfulness, context recall)

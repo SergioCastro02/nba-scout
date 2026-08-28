@@ -17,6 +17,7 @@ dependencies = [
     "psycopg[binary]>=3.2",
     "pgvector>=0.3",
     "fastembed>=0.4",
+    "nba_api>=1.5",
     "pypdf>=5",
     "numpy>=2",
     "platformdirs>=4",
