@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# Tooling
+.pytest_cache/
+.ruff_cache/
+.coverage
+
+# Local env
+.env
+
+# Downloaded source documents (fetched by scripts/download_corpus.py) — not redistributed
+data/
+
+# Local model / KB caches
+*.npz
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

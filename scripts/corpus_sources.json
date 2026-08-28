@@ -1,0 +1,16 @@
+{
+  "_comment": "Documents fetched into data/ by download_corpus.py. These are public reference documents; they are downloaded locally and NOT redistributed in this repo (data/ is gitignored). If a URL rots, replace it with a current one from the official source.",
+  "documents": [
+    {
+      "filename": "2023 NBA Collective Bargaining Agreement.pdf",
+      "url": "https://ak-static.cms.nba.com/wp-content/uploads/sites/4/2023/06/2023-NBA-Collective-Bargaining-Agreement.pdf",
+      "official_source": "https://www.nbpa.com/cba"
+    },
+    {
+      "filename": "NBA Official Rulebook.pdf",
+      "url": null,
+      "official_source": "https://official.nba.com/rulebook/",
+      "note": "No stable direct PDF URL. Download the rulebook PDF manually from the official source and save it here as data/NBA Official Rulebook.pdf, then run `nba-scout ingest --data-dir data`."
+    }
+  ]
+}
