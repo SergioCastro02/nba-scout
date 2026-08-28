@@ -27,6 +27,12 @@ def _cmd_ask(args: argparse.Namespace) -> None:
     print(format_context(results))
 
 
+def _cmd_serve(args: argparse.Namespace) -> None:
+    import uvicorn
+
+    uvicorn.run("nba_scout.api.app:app", host=args.host, port=args.port, reload=args.reload)
+
+
 def _cmd_chat(args: argparse.Namespace) -> None:
     from .agents import answer_question
 
@@ -66,6 +72,12 @@ def main() -> None:
     )
     p_chat.add_argument("question")
     p_chat.set_defaults(func=_cmd_chat)
+
+    p_serve = sub.add_parser("serve", help="run the HTTP API", parents=[common])
+    p_serve.add_argument("--host", default="127.0.0.1")
+    p_serve.add_argument("--port", type=int, default=8000)
+    p_serve.add_argument("--reload", action="store_true")
+    p_serve.set_defaults(func=_cmd_serve)
 
     args = parser.parse_args()
     logging.basicConfig(

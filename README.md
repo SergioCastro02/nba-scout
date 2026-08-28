@@ -16,8 +16,8 @@ statistics tools**, orchestrated as a **LangGraph** agent graph.
         └──► synthesis agent ──► grounded answer with citations
 ```
 
-> **Status:** knowledge base + LangGraph agent graph working from the CLI. FastAPI
-> service, tracing and eval are next — see [Roadmap](#roadmap).
+> **Status:** knowledge base + LangGraph agent graph + FastAPI service (streaming)
+> all working. RAG eval and the AWS deploy are next — see [Roadmap](#roadmap).
 
 ## Design
 
@@ -63,6 +63,55 @@ knowledge-base citations.
 > Gemini's free tier use a `*-flash-lite` model — the full `flash` models have a
 > low daily request quota.
 
+## HTTP API
+
+```bash
+nba-scout serve                 # http://127.0.0.1:8000  (docs at /docs)
+```
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /healthz` | liveness + effective config (providers, store, KB size) |
+| `POST /ask` | `{question}` → `{answer, route, sources}` |
+| `POST /ask/stream` | Server-Sent Events: one `step` event per graph node, then a final `answer` event |
+| `GET /docs` | OpenAPI UI |
+
+```bash
+curl -N -X POST localhost:8000/ask/stream \
+  -H 'content-type: application/json' \
+  -d '{"question":"is a flagrant 2 an ejection, and who led the league in blocks in 2023-24?"}'
+```
+
+```
+event: step
+data: {"node": "router", "keys": ["route"]}
+
+event: step
+data: {"node": "rules", "keys": ["retrieved", "rules_findings"]}
+
+event: step
+data: {"node": "stats", "keys": ["stats_findings"]}
+
+event: step
+data: {"node": "synthesis", "keys": ["answer"]}
+
+event: answer
+data: {"question": "...", "route": ["rules","stats"], "answer": "...", "sources": [...]}
+```
+
+Every response carries an `x-request-id` header and each request is logged as one
+JSON line with method, path, status and latency.
+
+### Tracing
+
+Set these in the environment and every graph run is captured as a LangSmith trace
+(one span per node, with latency and token counts):
+
+```bash
+export LANGSMITH_TRACING=true
+export LANGSMITH_API_KEY=lsv2_...
+```
+
 ## With Postgres + pgvector
 
 ```bash
@@ -104,9 +153,10 @@ pytest
 - [x] Config-driven providers (LLM / embeddings / vector store)
 - [x] Ingestion pipeline (bundled summaries + PDF loader) and retrieval
 - [x] LangGraph agent graph: router → rules / stats → synthesis
+- [x] FastAPI service: `/ask`, SSE `/ask/stream`, `/healthz`, request logging
+- [x] LangSmith tracing (env-driven)
 - [ ] Stats agent talks to `nba-mcp-server` over MCP when `MCP_SERVER_URL` is set
-- [ ] FastAPI service with streaming + `/healthz`
-- [ ] LangSmith / OpenTelemetry tracing
+- [ ] OpenTelemetry export (spans + metrics)
 - [ ] RAG evaluation harness (faithfulness, context recall)
 - [ ] Multilingual embeddings (bge-m3) — cross-lingual recall is weak with bge-small-en
 - [ ] Docker image + Terraform (ECS Fargate, RDS Postgres, Bedrock)
