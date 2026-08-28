@@ -28,7 +28,12 @@ def get_chat_model() -> BaseChatModel:
         )
 
     if s.llm_provider == "google":
+        import logging
+
         from langchain_google_genai import ChatGoogleGenerativeAI
+
+        # LangChain drives tool calls itself; silence the SDK's AFC recommendation notice.
+        logging.getLogger("google_genai.models").setLevel(logging.ERROR)
 
         return ChatGoogleGenerativeAI(
             model=s.google_model,

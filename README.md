@@ -104,6 +104,7 @@ pytest
 - [ ] FastAPI service with streaming + `/healthz`
 - [ ] LangSmith / OpenTelemetry tracing
 - [ ] RAG evaluation harness (faithfulness, context recall)
+- [ ] Multilingual embeddings (bge-m3) — cross-lingual recall is weak with bge-small-en
 - [ ] Docker image + Terraform (ECS Fargate, RDS Postgres, Bedrock)
 
 ## License
