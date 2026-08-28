@@ -21,6 +21,9 @@ data/
 # Local model / KB caches
 *.npz
 
+# Ad-hoc eval reports (the committed baseline lives in docs/)
+/eval_report.md
+
 # Editors / OS
 .vscode/
 .idea/

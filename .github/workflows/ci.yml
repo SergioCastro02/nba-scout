@@ -20,3 +20,24 @@ jobs:
       - run: pip install -e ".[dev]"
       - run: ruff check .
       - run: pytest -q
+
+  eval-retrieval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e .
+      - name: Cache embedding model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/fastembed
+          key: fastembed-bge-small-en-v1.5
+      - name: Retrieval metrics (no LLM, deterministic)
+        env:
+          FASTEMBED_CACHE_PATH: ~/.cache/fastembed
+        run: |
+          nba-scout ingest
+          nba-scout eval --retrieval-only
