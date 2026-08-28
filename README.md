@@ -17,7 +17,7 @@ statistics tools**, orchestrated as a **LangGraph** agent graph.
 ```
 
 > **Status:** knowledge base + LangGraph agent graph + FastAPI service (streaming)
-> all working. RAG eval and the AWS deploy are next — see [Roadmap](#roadmap).
+> + evaluation harness all working. The AWS deploy is next — see [Roadmap](#roadmap).
 
 ## Design
 
@@ -141,6 +141,16 @@ See [`.env.example`](.env.example). Key vars:
 | `NBA_SCOUT_VECTOR_STORE` | `memory` | or `pgvector` |
 | `NBA_SCOUT_MCP_SERVER_URL` | _unset_ | if set, stats agent calls nba-mcp-server here |
 
+## Evaluation
+
+```bash
+nba-scout eval --retrieval-only     # deterministic retrieval metrics, no API cost
+nba-scout eval --judge              # + faithfulness / correctness via an LLM judge
+```
+
+Scores a golden set on context recall, reciprocal rank, route accuracy,
+faithfulness and answer correctness. See [`docs/evaluation.md`](docs/evaluation.md).
+
 ## Development
 
 ```bash
@@ -155,9 +165,9 @@ pytest
 - [x] LangGraph agent graph: router → rules / stats → synthesis
 - [x] FastAPI service: `/ask`, SSE `/ask/stream`, `/healthz`, request logging
 - [x] LangSmith tracing (env-driven)
+- [x] Evaluation harness: retrieval + route + faithfulness + correctness
 - [ ] Stats agent talks to `nba-mcp-server` over MCP when `MCP_SERVER_URL` is set
 - [ ] OpenTelemetry export (spans + metrics)
-- [ ] RAG evaluation harness (faithfulness, context recall)
 - [ ] Multilingual embeddings (bge-m3) — cross-lingual recall is weak with bge-small-en
 - [ ] Docker image + Terraform (ECS Fargate, RDS Postgres, Bedrock)
 

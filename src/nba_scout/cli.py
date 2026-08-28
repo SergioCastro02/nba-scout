@@ -27,6 +27,29 @@ def _cmd_ask(args: argparse.Namespace) -> None:
     print(format_context(results))
 
 
+def _cmd_eval(args: argparse.Namespace) -> None:
+    from .eval import DATASET, render_markdown, run_eval
+
+    cases = DATASET[: args.limit] if args.limit else DATASET
+    judge = None
+    if args.judge and not args.retrieval_only:
+        from .llm import get_chat_model
+
+        judge = get_chat_model()
+
+    report = run_eval(
+        cases,
+        retrieval_only=args.retrieval_only,
+        judge_llm=judge,
+        pace_seconds=args.pace,
+    )
+    markdown = render_markdown(report)
+    print(markdown)
+    if args.report:
+        Path(args.report).write_text(markdown, encoding="utf-8")
+        print(f"written to {args.report}")
+
+
 def _cmd_serve(args: argparse.Namespace) -> None:
     import uvicorn
 
@@ -72,6 +95,25 @@ def main() -> None:
     )
     p_chat.add_argument("question")
     p_chat.set_defaults(func=_cmd_chat)
+
+    p_eval = sub.add_parser("eval", help="run the evaluation harness", parents=[common])
+    p_eval.add_argument(
+        "--retrieval-only",
+        action="store_true",
+        help="only deterministic retrieval metrics (no LLM)",
+    )
+    p_eval.add_argument(
+        "--judge", action="store_true", help="score faithfulness/correctness with an LLM judge"
+    )
+    p_eval.add_argument("--limit", type=int, default=0, help="run only the first N cases")
+    p_eval.add_argument(
+        "--pace",
+        type=float,
+        default=0.0,
+        help="seconds to wait between cases (use ~20 on Gemini's 15 req/min free tier)",
+    )
+    p_eval.add_argument("--report", help="also write the markdown report to this path")
+    p_eval.set_defaults(func=_cmd_eval)
 
     p_serve = sub.add_parser("serve", help="run the HTTP API", parents=[common])
     p_serve.add_argument("--host", default="127.0.0.1")
