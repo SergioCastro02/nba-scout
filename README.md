@@ -24,7 +24,7 @@ statistics tools**, orchestrated as a **LangGraph** agent graph.
 | Concern | Choice | Why |
 |---|---|---|
 | Orchestration | LangGraph | explicit state machine, inspectable, matches the JD |
-| LLM | AWS Bedrock **or** Anthropic, config-selected | one interface (`llm.get_chat_model`), deploy on Bedrock, dev on Anthropic |
+| LLM | Bedrock / Anthropic / Google, config-selected | one interface (`llm.get_chat_model`); deploy on Bedrock, dev on Anthropic or a free Gemini key |
 | Embeddings | fastembed (local ONNX) **or** Bedrock Titan | works offline out of the box; Titan for AWS |
 | Vector store | pgvector **or** in-memory, config-selected | `VectorStore` Protocol — prod path is Postgres, tests/quickstart use numpy |
 | Stats | `nba-mcp-server` over HTTP, or `nba_api` direct | reuses the companion MCP project |
@@ -46,9 +46,14 @@ nba-scout ask "how many fouls before a player fouls out?"
 graph, set an LLM key and use `chat`:
 
 ```bash
-export NBA_SCOUT_ANTHROPIC_API_KEY=sk-ant-...
+# Google AI Studio gives a free API key with no credit card: https://aistudio.google.com/apikey
+export NBA_SCOUT_LLM_PROVIDER=google
+export NBA_SCOUT_GOOGLE_API_KEY=AIza...
+
 nba-scout chat "is a flagrant 2 an automatic ejection, and who led the league in points in 2023-24?"
 ```
+
+(Or `NBA_SCOUT_LLM_PROVIDER=anthropic` / `bedrock` with the matching credentials.)
 
 The router sends the rules half to the RAG agent and the stats half to a ReAct
 agent over the live-stats tools; the synthesis node merges them, keeping the
@@ -78,7 +83,7 @@ See [`.env.example`](.env.example). Key vars:
 
 | Var | Default | Notes |
 |---|---|---|
-| `NBA_SCOUT_LLM_PROVIDER` | `anthropic` | or `bedrock` |
+| `NBA_SCOUT_LLM_PROVIDER` | `anthropic` | or `bedrock`, or `google` (free tier) |
 | `NBA_SCOUT_EMBEDDING_PROVIDER` | `fastembed` | or `bedrock` (set `EMBEDDING_DIM=1024`) |
 | `NBA_SCOUT_VECTOR_STORE` | `memory` | or `pgvector` |
 | `NBA_SCOUT_MCP_SERVER_URL` | _unset_ | if set, stats agent calls nba-mcp-server here |

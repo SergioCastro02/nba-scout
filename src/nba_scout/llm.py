@@ -27,6 +27,16 @@ def get_chat_model() -> BaseChatModel:
             max_tokens=s.llm_max_tokens,
         )
 
+    if s.llm_provider == "google":
+        from langchain_google_genai import ChatGoogleGenerativeAI
+
+        return ChatGoogleGenerativeAI(
+            model=s.google_model,
+            api_key=s.google_api_key,
+            temperature=s.llm_temperature,
+            max_tokens=s.llm_max_tokens,
+        )
+
     from langchain_anthropic import ChatAnthropic
 
     return ChatAnthropic(

@@ -13,7 +13,7 @@ from typing import Literal
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-LLMProvider = Literal["anthropic", "bedrock"]
+LLMProvider = Literal["anthropic", "bedrock", "google"]
 EmbeddingProvider = Literal["fastembed", "bedrock"]
 VectorStoreKind = Literal["memory", "pgvector"]
 
@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     anthropic_model: str = "claude-sonnet-4-5"
     bedrock_model: str = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
     aws_region: str = "us-east-1"
+    # google — free tier at https://aistudio.google.com/apikey (no card)
+    google_api_key: str | None = None
+    google_model: str = "gemini-2.0-flash"
     llm_temperature: float = 0.0
     llm_max_tokens: int = 1024
 
