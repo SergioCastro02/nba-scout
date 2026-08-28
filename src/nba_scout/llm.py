@@ -40,6 +40,8 @@ def get_chat_model() -> BaseChatModel:
             api_key=s.google_api_key,
             temperature=s.llm_temperature,
             max_tokens=s.llm_max_tokens,
+            retries=2,
+            request_timeout=30,
         )
 
     from langchain_anthropic import ChatAnthropic

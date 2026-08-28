@@ -59,6 +59,10 @@ The router sends the rules half to the RAG agent and the stats half to a ReAct
 agent over the live-stats tools; the synthesis node merges them, keeping the
 knowledge-base citations.
 
+> One question makes ~3–5 LLM calls (router + each specialist + synthesis). On
+> Gemini's free tier use a `*-flash-lite` model — the full `flash` models have a
+> low daily request quota.
+
 ## With Postgres + pgvector
 
 ```bash

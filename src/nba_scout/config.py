@@ -34,7 +34,8 @@ class Settings(BaseSettings):
     aws_region: str = "us-east-1"
     # google — free tier at https://aistudio.google.com/apikey (no card)
     google_api_key: str | None = None
-    google_model: str = "gemini-flash-latest"
+    # a "lite" model — largest free-tier daily quota
+    google_model: str = "gemini-3.5-flash-lite"
     llm_temperature: float = 0.0
     llm_max_tokens: int = 1024
 
