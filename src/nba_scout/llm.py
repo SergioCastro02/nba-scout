@@ -29,11 +29,14 @@ def get_chat_model() -> BaseChatModel:
 
     if s.llm_provider == "google":
         import logging
+        import warnings
 
         from langchain_google_genai import ChatGoogleGenerativeAI
 
         # LangChain drives tool calls itself; silence the SDK's AFC recommendation notice.
         logging.getLogger("google_genai.models").setLevel(logging.ERROR)
+        # "lite" models use fixed sampling and ignore temperature — expected, not a problem.
+        warnings.filterwarnings("ignore", message=".*fixed sampling defaults.*")
 
         return ChatGoogleGenerativeAI(
             model=s.google_model,
