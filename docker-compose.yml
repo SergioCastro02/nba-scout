@@ -15,5 +15,28 @@ services:
       timeout: 3s
       retries: 10
 
+  # One-shot: build the knowledge base in Postgres, then exit.
+  ingest:
+    build: .
+    command: ["ingest", "-v"]
+    environment: &app_env
+      NBA_SCOUT_VECTOR_STORE: pgvector
+      NBA_SCOUT_DATABASE_URL: postgresql://nba:nba@db:5432/nba_scout
+      NBA_SCOUT_LLM_PROVIDER: ${NBA_SCOUT_LLM_PROVIDER:-google}
+      NBA_SCOUT_GOOGLE_API_KEY: ${NBA_SCOUT_GOOGLE_API_KEY:-}
+      NBA_SCOUT_ANTHROPIC_API_KEY: ${NBA_SCOUT_ANTHROPIC_API_KEY:-}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment: *app_env
+    depends_on:
+      ingest:
+        condition: service_completed_successfully
+
 volumes:
   pgdata:

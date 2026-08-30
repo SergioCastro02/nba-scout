@@ -41,3 +41,19 @@ jobs:
         run: |
           nba-scout ingest
           nba-scout eval --retrieval-only
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t nba-scout:ci .
+
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform -chdir=infra fmt -check
+      - run: |
+          terraform -chdir=infra init -backend=false
+          terraform -chdir=infra validate

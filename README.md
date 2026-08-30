@@ -17,7 +17,7 @@ statistics tools**, orchestrated as a **LangGraph** agent graph.
 ```
 
 > **Status:** knowledge base + LangGraph agent graph + FastAPI service (streaming)
-> + evaluation harness all working. The AWS deploy is next — see [Roadmap](#roadmap).
+> + evaluation harness + Docker/Terraform for AWS all in place — see [Roadmap](#roadmap).
 
 ## Design
 
@@ -112,12 +112,22 @@ export LANGSMITH_TRACING=true
 export LANGSMITH_API_KEY=lsv2_...
 ```
 
-## With Postgres + pgvector
+## With Postgres + pgvector (Docker)
+
+The full stack — Postgres, a one-shot ingest, and the API:
 
 ```bash
-docker compose up -d
+export NBA_SCOUT_GOOGLE_API_KEY=AIza...       # or NBA_SCOUT_ANTHROPIC_API_KEY
+docker compose up --build
+# API on http://localhost:8000 once the ingest job finishes
+```
+
+Or just the database, with the app running on the host:
+
+```bash
+docker compose up -d db
 export NBA_SCOUT_VECTOR_STORE=pgvector
-nba-scout ingest -v
+nba-scout ingest -v && nba-scout serve
 ```
 
 ## Real documents
@@ -151,6 +161,13 @@ nba-scout eval --judge              # + faithfulness / correctness via an LLM ju
 Scores a golden set on context recall, reciprocal rank, route accuracy,
 faithfulness and answer correctness. See [`docs/evaluation.md`](docs/evaluation.md).
 
+## Deploy to AWS
+
+Terraform stack in [`infra/`](infra/README.md): ECS Fargate service + RDS Postgres
+(pgvector) + ALB + CloudWatch. LLM and embeddings on Bedrock via the task IAM role
+(no stored keys); database URL in Secrets Manager; a separate ECS task for
+ingestion. `terraform validate` and `docker build` run in CI.
+
 ## Development
 
 ```bash
@@ -163,13 +180,14 @@ pytest
 - [x] Config-driven providers (LLM / embeddings / vector store)
 - [x] Ingestion pipeline (bundled summaries + PDF loader) and retrieval
 - [x] LangGraph agent graph: router → rules / stats → synthesis
-- [x] FastAPI service: `/ask`, SSE `/ask/stream`, `/healthz`, request logging
+- [x] FastAPI service: `/ask`, SSE `/ask/stream`, `/healthz`, `/readyz`, request logging
 - [x] LangSmith tracing (env-driven)
 - [x] Evaluation harness: retrieval + route + faithfulness + correctness
+- [x] Docker image + Terraform (ECS Fargate, RDS Postgres, Bedrock)
 - [ ] Stats agent talks to `nba-mcp-server` over MCP when `MCP_SERVER_URL` is set
 - [ ] OpenTelemetry export (spans + metrics)
 - [ ] Multilingual embeddings (bge-m3) — cross-lingual recall is weak with bge-small-en
-- [ ] Docker image + Terraform (ECS Fargate, RDS Postgres, Bedrock)
+- [ ] Continuous deploy (GitHub OIDC → push image → roll service)
 
 ## License
 
