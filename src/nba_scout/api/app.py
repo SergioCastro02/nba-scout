@@ -91,6 +91,22 @@ def create_app() -> FastAPI:
             knowledge_base_chunks=chunks,
         )
 
+    @app.get("/readyz")
+    async def readyz():
+        """Readiness: the knowledge base is reachable and populated."""
+        try:
+            from ..vectorstore import get_vector_store
+
+            count = get_vector_store().count()
+        except Exception as e:  # noqa: BLE001
+            return JSONResponse(status_code=503, content={"ready": False, "detail": str(e)})
+        if count <= 0:
+            return JSONResponse(
+                status_code=503,
+                content={"ready": False, "detail": "knowledge base is empty — run ingest"},
+            )
+        return {"ready": True, "knowledge_base_chunks": count}
+
     @app.post("/ask", response_model=AskResponse)
     async def ask(body: AskRequest):
         from ..agents.graph import get_compiled_graph

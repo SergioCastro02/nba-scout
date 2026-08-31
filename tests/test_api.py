@@ -54,6 +54,17 @@ def test_healthz(client: TestClient):
     assert body["llm_provider"] in {"anthropic", "bedrock", "google"}
 
 
+def test_readyz_reports_empty_knowledge_base(client: TestClient, monkeypatch):
+    class _Empty:
+        def count(self):
+            return 0
+
+    monkeypatch.setattr("nba_scout.vectorstore.get_vector_store", lambda: _Empty())
+    r = client.get("/readyz")
+    assert r.status_code == 503
+    assert r.json()["ready"] is False
+
+
 def test_ask_returns_answer_and_sources(client: TestClient):
     r = client.post("/ask", json={"question": "is a flagrant 2 an ejection?"})
     assert r.status_code == 200
